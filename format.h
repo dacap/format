@@ -140,8 +140,9 @@ namespace format_details {
 template<typename StringType = std::string,
          typename FormatType,
          typename ... Args>
-StringType format(FormatType& fmt, Args&& ... args) {
-  StringType output;
+void append_format(StringType& output,
+                   FormatType& fmt,
+                   Args&& ... args) {
   bool insideRef = false;
   std::size_t refNumber;
 
@@ -189,7 +190,15 @@ StringType format(FormatType& fmt, Args&& ... args) {
 
   if (insideRef)
     throw std::logic_error("Last {n} item was not closed");
+}
 
+template<typename StringType = std::string,
+         typename FormatType,
+         typename ... Args>
+StringType format(FormatType& fmt,
+                  Args&& ... args) {
+  StringType output;
+  append_format(output, fmt, std::forward<Args>(args)...);
   return output;
 }
 
