@@ -39,8 +39,9 @@ namespace format_details {
     }
   }
 
-  template<typename Pred, typename ... Args>
-  inline void variadic_switch(const int index,
+  template<typename Pred,
+           typename ... Args>
+  inline void variadic_switch(const std::size_t index,
                               Pred&& pred,
                               Args&& ... args) {
     variadic_switch_0(index,
