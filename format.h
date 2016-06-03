@@ -141,8 +141,6 @@ template<typename StringType = std::string,
          typename FormatType,
          typename ... Args>
 StringType format(FormatType& fmt, Args&& ... args) {
-  typedef std::tuple<Args...> Tuple;
-
   StringType output;
   bool insideRef = false;
   std::size_t refNumber;
