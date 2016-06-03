@@ -7,39 +7,45 @@
 #define FORMAT_H_INCLUDED
 
 #include <sstream>
-#include <tuple>
 #include <stdexcept>
 
 namespace format_details {
 
   // variadic_switch()
 
-  template<int Index, typename Tuple, typename Pred>
-  inline typename std::enable_if<(Index == 0), void>::type
-  variadic_switch_0(Tuple&& tuple, const int index, Pred&& pred) {
-    if (index == 0) {
-      pred(std::get<0>(std::forward<Tuple>(tuple)));
-    }
+  template<typename Pred,
+           typename Arg>
+  void variadic_switch_0(const std::size_t index,
+                         Pred&& pred,
+                         Arg&& arg) {
+    if (index == 0)
+      pred(std::forward<Arg>(arg));
   }
 
-  template<int Index, typename Tuple, typename Pred>
-  inline typename std::enable_if<(Index > 0), void>::type
-  variadic_switch_0(Tuple&& tuple, const int index, Pred&& pred) {
-    if (index == Index) {
-      pred(std::get<Index>(std::forward<Tuple>(tuple)));
+  template<typename Pred,
+           typename Arg,
+           typename ... Args>
+  void variadic_switch_0(const std::size_t index,
+                         Pred&& pred,
+                         Arg&& arg,
+                         Args&& ... args) {
+    if (index == 0) {
+      pred(std::forward<Arg>(arg));
     }
     else {
-      variadic_switch_0<Index-1>(
-        std::forward<Tuple>(tuple), index,
-        std::forward<Pred>(pred));
+      variadic_switch_0(index-1,
+                        std::forward<Pred>(pred),
+                        std::forward<Args>(args)...);
     }
   }
 
-  template<typename Tuple, typename Pred>
-  inline void variadic_switch(Tuple&& tuple, const int index, Pred&& pred) {
-    variadic_switch_0<(std::tuple_size<typename std::remove_reference<Tuple>::type>::value-1)>(
-      std::forward<Tuple>(tuple), index,
-      std::forward<Pred>(pred));
+  template<typename Pred, typename ... Args>
+  inline void variadic_switch(const int index,
+                              Pred&& pred,
+                              Args&& ... args) {
+    variadic_switch_0(index,
+                      std::forward<Pred>(pred),
+                      std::forward<Args>(args)...);
   }
 
   // format_value()
@@ -138,8 +144,7 @@ StringType format(FormatType& fmt, Args&& ... args) {
 
   StringType output;
   bool insideRef = false;
-  int refNumber;
-  Tuple tuple(std::forward<Args>(args)...);
+  std::size_t refNumber;
 
   for (auto chr : fmt) {
     if (!chr)
@@ -152,12 +157,13 @@ StringType format(FormatType& fmt, Args&& ... args) {
         break;
 
       case '}':
-        if (refNumber >= 0 && refNumber < std::tuple_size<Tuple>::value) {
+        if (refNumber < sizeof...(Args)) {
           format_details::variadic_switch(
-            tuple, refNumber,
+            refNumber,
             [&output](auto&& x){
               format_details::format_value(output, x);
-            });
+            },
+            std::forward<Args>(args)...);
         }
         else {
           // refNumber is out of range
@@ -169,8 +175,11 @@ StringType format(FormatType& fmt, Args&& ... args) {
       default:
         if (insideRef) {
           if (chr >= '0' && chr <= '9') {
-            refNumber = (refNumber * 10) + (chr - '0');
+            refNumber *= 10;
+            refNumber += (chr - '0');
           }
+          else
+            throw std::logic_error("Invalid character inside {n} item");
         }
         else {
           output.push_back(chr);
