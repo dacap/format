@@ -8,4 +8,5 @@ function(add_format_test name)
   add_test(NAME ${name} COMMAND ${name})
 endfunction()
 
+add_format_test(avoid_copy)
 add_format_test(ints)
