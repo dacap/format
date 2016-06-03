@@ -20,3 +20,4 @@ Prints:
 
 * Visual Studio 2015
 * Xcode 7.3.1
+* GCC 6.1.0
