@@ -155,7 +155,7 @@ StringType format(FormatType& fmt, Args&& ... args) {
         {
           if (refNumber >= 0 && refNumber < std::tuple_size<Tuple>::value) {
             format_details::variadic_switch(
-              std::forward<Tuple>(tuple), refNumber,
+              tuple, refNumber,
               [&output](auto&& x){
                 format_details::format_value(output, x);
               });
