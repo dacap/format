@@ -42,6 +42,57 @@ namespace format_details {
       std::forward<Pred>(pred));
   }
 
+  // format_value()
+
+  template<typename String, typename T>
+  inline typename std::enable_if<!std::is_integral<T>::value, void>::type
+  format_value(String& output, T& value) {
+    std::ostringstream s;
+    s << value;
+    output += s.str();
+  }
+
+  // Fast integer number -> string
+  template<typename String, typename T>
+  inline typename std::enable_if<std::is_integral<T>::value, void>::type
+  format_value(String& output, const T& orig_value) {
+    T value = orig_value;
+
+    if (value == 0) {
+      output.push_back('0');
+      return;
+    }
+
+    if (value < 0) {
+      output.push_back('-');
+      value = -value;
+    }
+
+    int i = 0, values[20];
+    while (true) {
+      if (i == sizeof(values)/sizeof(values[0]))
+        throw std::logic_error("Too many decimals");
+
+      values[i++] = (value % 10);
+      if (value < 10)
+        break;
+      value /= 10;
+    }
+
+    for (int j=i-1; j>=0; --j)
+      output.push_back('0' + values[j]);
+  }
+
+  template<typename String>
+  inline void format_value(String& output, const char* value) {
+    output += value;
+  }
+
+  template<typename String>
+  inline void format_value(String& output, String& value) {
+    output += value;
+  }
+
 } // namespace format_details
 
 template<typename StringType = std::string,
@@ -67,18 +118,17 @@ StringType format(FormatType& fmt, Args&& ... args) {
 
       case '}':
         {
-          std::stringstream buf;
           if (refNumber >= 0 && refNumber < std::tuple_size<Tuple>::value) {
             format_details::variadic_switch(
               std::forward<Tuple>(tuple), refNumber,
-              [&buf](auto&& x){ buf << x; });
+              [&output](auto&& x){
+                format_details::format_value(output, x);
+              });
           }
           else {
             // refNumber is out of range
             throw std::logic_error("A {n} item in format is out of range");
           }
-
-          output += buf.str();
         }
         insideRef = false;
         break;
