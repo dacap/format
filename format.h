@@ -12,11 +12,13 @@
 
 namespace format_details {
 
+  // variadic_switch()
+
   template<int Index, typename Tuple, typename Pred>
   inline typename std::enable_if<(Index == 0), void>::type
   variadic_switch_0(Tuple&& tuple, const int index, Pred&& pred) {
     if (index == 0) {
-      pred(std::get<0>(tuple));
+      pred(std::get<0>(std::forward<Tuple>(tuple)));
     }
   }
 
@@ -24,7 +26,7 @@ namespace format_details {
   inline typename std::enable_if<(Index > 0), void>::type
   variadic_switch_0(Tuple&& tuple, const int index, Pred&& pred) {
     if (index == Index) {
-      pred(std::get<Index>(tuple));
+      pred(std::get<Index>(std::forward<Tuple>(tuple)));
     }
     else {
       variadic_switch_0<Index-1>(
