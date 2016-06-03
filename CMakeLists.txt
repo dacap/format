@@ -4,7 +4,10 @@ cmake_minimum_required(VERSION 3.5)
 
 project(format CXX)
 
-add_definitions(-std=c++14)
+if(UNIX)
+  add_definitions(-std=c++14)
+endif()
+
 include_directories(.)
 
 # Examples
