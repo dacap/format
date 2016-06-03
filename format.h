@@ -46,7 +46,7 @@ namespace format_details {
 
   template<typename String, typename T>
   inline typename std::enable_if<!std::is_integral<T>::value, void>::type
-  format_value(String& output, T& value) {
+  format_value(String& output, const T& value) {
     std::ostringstream s;
     s << value;
     output += s.str();
@@ -124,7 +124,7 @@ namespace format_details {
   }
 
   template<typename String>
-  inline void format_value(String& output, String& value) {
+  inline void format_value(String& output, const String& value) {
     output += value;
   }
 
