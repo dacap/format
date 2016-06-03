@@ -152,18 +152,16 @@ StringType format(FormatType& fmt, Args&& ... args) {
         break;
 
       case '}':
-        {
-          if (refNumber >= 0 && refNumber < std::tuple_size<Tuple>::value) {
-            format_details::variadic_switch(
-              tuple, refNumber,
-              [&output](auto&& x){
-                format_details::format_value(output, x);
-              });
-          }
-          else {
-            // refNumber is out of range
-            throw std::logic_error("A {n} item in format is out of range");
-          }
+        if (refNumber >= 0 && refNumber < std::tuple_size<Tuple>::value) {
+          format_details::variadic_switch(
+            tuple, refNumber,
+            [&output](auto&& x){
+              format_details::format_value(output, x);
+            });
+        }
+        else {
+          // refNumber is out of range
+          throw std::logic_error("A {n} item in format is out of range");
         }
         insideRef = false;
         break;
