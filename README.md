@@ -15,3 +15,8 @@ Example:
 Prints:
 
     4*4 is 16
+
+## Tested Compilers
+
+* Visual Studio 2015
+* Xcode 7.3.1
