@@ -28,9 +28,11 @@ void test_limits() {
 
 int main() {
   test_limits<bool>();
+  test_limits<short>();
   test_limits<int>();
   test_limits<long>();
   test_limits<long long>();
+  test_limits<unsigned short>();
   test_limits<unsigned int>();
   test_limits<unsigned long>();
   test_limits<unsigned long long>();
