@@ -54,7 +54,35 @@ namespace format_details {
 
   // Fast integer number -> string
   template<typename String, typename T>
-  inline typename std::enable_if<std::is_integral<T>::value, void>::type
+  inline typename std::enable_if<std::is_unsigned<T>::value, void>::type
+  format_value(String& output, const T& value) {
+    if (value == 0) {
+      output.push_back('0');
+      return;
+    }
+
+    // long long max value is "18446744073709551615" (20 chars)
+    int i = 0, values[20];
+    T v = value;
+
+    while (true) {
+      if (i == sizeof(values)/sizeof(values[0]))
+        throw std::logic_error("Too many decimals");
+
+      values[i++] = (v % 10);
+      if (v < 10)
+        break;
+
+      v /= 10;
+    }
+
+    for (int j=i-1; j>=0; --j)
+      output.push_back('0' + values[j]);
+  }
+
+  // Fast integer number -> string
+  template<typename String, typename T>
+  inline typename std::enable_if<std::is_signed<T>::value, void>::type
   format_value(String& output, const T& value) {
     if (value == 0) {
       output.push_back('0');
