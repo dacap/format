@@ -20,6 +20,14 @@ namespace format {
     s << value;
     output += s.str();
   }
+  // Fast integer number -> string
+  template<typename String>
+  inline void append_value(String& output, const bool& value) {
+    if (value == 0)
+      output.push_back('0');
+    else
+      output.push_back('1');
+  }
 
   // Fast integer number -> string
   template<typename String, typename T>
