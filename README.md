@@ -1,7 +1,8 @@
 # Format Library
 *Copyright (C) 2016 David Capello*
 
-> Released under the [MIT license](LICENSE.txt)
+[![Build Status](https://travis-ci.org/dacap/format.svg)](https://travis-ci.org/dacap/format)
+[![MIT Licensed](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.txt)
 
 Example:
 
