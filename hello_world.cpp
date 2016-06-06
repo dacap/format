@@ -7,5 +7,5 @@
 #include "format.h"
 
 int main() {
-  std::cout << format("{1} {0}!", "world", "hello") << "\n";
+  std::cout << format::string("{1} {0}!", "world", "hello") << "\n";
 }

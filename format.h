@@ -9,51 +9,13 @@
 #include <sstream>
 #include <stdexcept>
 
-namespace format_details {
+namespace format {
 
-  // variadic_switch()
-
-  template<typename Pred,
-           typename Arg>
-  void variadic_switch_0(const std::size_t index,
-                         Pred&& pred,
-                         Arg&& arg) {
-    if (index == 0)
-      pred(std::forward<Arg>(arg));
-  }
-
-  template<typename Pred,
-           typename Arg,
-           typename ... Args>
-  void variadic_switch_0(const std::size_t index,
-                         Pred&& pred,
-                         Arg&& arg,
-                         Args&& ... args) {
-    if (index == 0) {
-      pred(std::forward<Arg>(arg));
-    }
-    else {
-      variadic_switch_0(index-1,
-                        std::forward<Pred>(pred),
-                        std::forward<Args>(args)...);
-    }
-  }
-
-  template<typename Pred,
-           typename ... Args>
-  inline void variadic_switch(const std::size_t index,
-                              Pred&& pred,
-                              Args&& ... args) {
-    variadic_switch_0(index,
-                      std::forward<Pred>(pred),
-                      std::forward<Args>(args)...);
-  }
-
-  // format_value()
+  // format::append_value()
 
   template<typename String, typename T>
   inline typename std::enable_if<!std::is_integral<T>::value, void>::type
-  format_value(String& output, const T& value) {
+  append_value(String& output, const T& value) {
     std::ostringstream s;
     s << value;
     output += s.str();
@@ -62,7 +24,7 @@ namespace format_details {
   // Fast integer number -> string
   template<typename String, typename T>
   inline typename std::enable_if<std::is_unsigned<T>::value, void>::type
-  format_value(String& output, const T& value) {
+  append_value(String& output, const T& value) {
     if (value == 0) {
       output.push_back('0');
       return;
@@ -90,7 +52,7 @@ namespace format_details {
   // Fast integer number -> string
   template<typename String, typename T>
   inline typename std::enable_if<std::is_signed<T>::value, void>::type
-  format_value(String& output, const T& value) {
+  append_value(String& output, const T& value) {
     if (value == 0) {
       output.push_back('0');
       return;
@@ -126,93 +88,133 @@ namespace format_details {
   }
 
   template<typename String>
-  inline void format_value(String& output, const char* value) {
+  inline void append_value(String& output, const char* value) {
     output += value;
   }
 
   template<typename String>
-  inline void format_value(String& output, const String& value) {
+  inline void append_value(String& output, const String& value) {
     output += value;
   }
 
-  // This is for C++11 support, on C++14 we can use a generic lambda.
-  template<typename String>
-  struct generic_format_value {
-    generic_format_value(String& output)
-      : output(output) {
+  template<typename String = std::string,
+           typename T>
+  inline String value(T&& value) {
+    String out;
+    append_value<String, T>(out, std::forward<T>(value));
+    return out;
+  }
+
+  namespace format_details {
+
+    // format::format_details::variadic_switch()
+
+    template<typename Pred,
+             typename Arg>
+    void variadic_switch(const std::size_t index,
+                         Pred&& pred,
+                         Arg&& arg) {
+      if (index == 0)
+        pred(std::forward<Arg>(arg));
     }
 
-    template<typename T>
-    void operator()(T&& value) {
-      format_value(output, std::forward<T>(value));
+    template<typename Pred,
+             typename Arg,
+             typename ... Args>
+    void variadic_switch(const std::size_t index,
+                         Pred&& pred,
+                         Arg&& arg,
+                         Args&& ... args) {
+      if (index == 0) {
+        pred(std::forward<Arg>(arg));
+      }
+      else {
+        variadic_switch(index-1,
+                        std::forward<Pred>(pred),
+                        std::forward<Args>(args)...);
+      }
     }
 
-    String& output;
-  };
+    // This is for C++11 support, on C++14 we can use a generic lambda.
+    template<typename String>
+    struct generic_format_value {
+      generic_format_value(String& output)
+        : output(output) {
+      }
 
-} // namespace format_details
+      template<typename T>
+      void operator()(T&& value) {
+        format::append_value(output, std::forward<T>(value));
+      }
 
-template<typename StringType = std::string,
-         typename FormatType,
-         typename ... Args>
-void append_format(StringType& output,
-                   FormatType& fmt,
-                   Args&& ... args) {
-  bool insideRef = false;
-  std::size_t refNumber;
+      String& output;
+    };
 
-  for (auto chr : fmt) {
-    if (!chr)
-      break;
+  } // namespace format_details
 
-    switch (chr) {
-      case '{':
-        insideRef = true;
-        refNumber = 0;
+  template<typename StringType = std::string,
+           typename FormatType,
+           typename ... Args>
+  void append_string(StringType& output,
+                     FormatType& fmt,
+                     Args&& ... args) {
+    bool insideRef = false;
+    std::size_t refNumber;
+
+    for (auto chr : fmt) {
+      if (!chr)
         break;
 
-      case '}':
-        if (refNumber < sizeof...(Args)) {
-          format_details::variadic_switch(
-            refNumber,
-            format_details::generic_format_value<StringType>(output),
-            std::forward<Args>(args)...);
-        }
-        else {
-          // refNumber is out of range
-          throw std::logic_error("A {n} item in format is out of range");
-        }
-        insideRef = false;
-        break;
+      switch (chr) {
+        case '{':
+          insideRef = true;
+          refNumber = 0;
+          break;
 
-      default:
-        if (insideRef) {
-          if (chr >= '0' && chr <= '9') {
-            refNumber *= 10;
-            refNumber += (chr - '0');
+        case '}':
+          if (refNumber < sizeof...(Args)) {
+            format_details::variadic_switch(
+              refNumber,
+              format_details::generic_format_value<StringType>(output),
+              std::forward<Args>(args)...);
           }
-          else
-            throw std::logic_error("Invalid character inside {n} item");
-        }
-        else {
-          output.push_back(chr);
-        }
-        break;
+          else {
+            // refNumber is out of range
+            throw std::logic_error("A {n} item in format is out of range");
+          }
+          insideRef = false;
+          break;
+
+        default:
+          if (insideRef) {
+            if (chr >= '0' && chr <= '9') {
+              refNumber *= 10;
+              refNumber += (chr - '0');
+            }
+            else
+              throw std::logic_error("Invalid character inside {n} item");
+          }
+          else {
+            output.push_back(chr);
+          }
+          break;
+      }
     }
+
+    if (insideRef)
+      throw std::logic_error("Last {n} item was not closed");
   }
 
-  if (insideRef)
-    throw std::logic_error("Last {n} item was not closed");
-}
+  template<typename StringType = std::string,
+           typename FormatType,
+           typename ... Args>
+  StringType string(FormatType& fmt,
+                    Args&& ... args) {
+    StringType output;
+    append_string(output, fmt, std::forward<Args>(args)...);
+    return output;
+  }
 
-template<typename StringType = std::string,
-         typename FormatType,
-         typename ... Args>
-StringType format(FormatType& fmt,
-                  Args&& ... args) {
-  StringType output;
-  append_format(output, fmt, std::forward<Args>(args)...);
-  return output;
-}
+} // namespace format
 
 #endif

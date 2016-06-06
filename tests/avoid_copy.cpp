@@ -22,6 +22,6 @@ std::ostream& operator<<(std::ostream& os, const A& a) {
 }
 
 int main() {
-  auto fmt = format("{0}", A());
+  auto fmt = format::string("{0}", A());
   std::cout << "Output:" << fmt << "\n";
 }

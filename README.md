@@ -9,12 +9,31 @@ Example:
     #include "format.h"
 
     int main() {
-      std::cout << format("{1}*{1} {0} {2}", "is", 4, 16) << "\n";
+      std::cout << format::string("{1}*{1} {0} {2}", "is", 4, 16) << "\n";
     }
 
 Prints:
 
     4*4 is 16
+
+## Format one value
+
+Example:
+
+    #include <iostream>
+    #include "format.h"
+
+    int main() {
+      std::string out;
+      format::append_value(out, 32);
+
+      std::cout << out << "+" << out << " = "
+                << format::value(64) << "\n";
+    }
+
+Prints:
+
+    32*32 = 64
 
 ## Tested Compilers
 

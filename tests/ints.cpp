@@ -16,9 +16,10 @@ void test_limits() {
       << std::numeric_limits<T>::max();
 
   std::string expected = str.str();
-  std::string actual = format("{0} {1}",
-                              std::numeric_limits<T>::min(),
-                              std::numeric_limits<T>::max());
+  std::string actual =
+    format::string("{0} {1}",
+                   std::numeric_limits<T>::min(),
+                   std::numeric_limits<T>::max());
 
   std::cout << expected << "\n"
             << actual << "\n";
