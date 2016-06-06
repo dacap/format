@@ -135,6 +135,21 @@ namespace format_details {
     output += value;
   }
 
+  // This is for C++11 support, on C++14 we can use a generic lambda.
+  template<typename String>
+  struct generic_format_value {
+    generic_format_value(String& output)
+      : output(output) {
+    }
+
+    template<typename T>
+    void operator()(T&& value) {
+      format_value(output, std::forward<T>(value));
+    }
+
+    String& output;
+  };
+
 } // namespace format_details
 
 template<typename StringType = std::string,
@@ -160,9 +175,7 @@ void append_format(StringType& output,
         if (refNumber < sizeof...(Args)) {
           format_details::variadic_switch(
             refNumber,
-            [&output](auto&& x){
-              format_details::format_value(output, x);
-            },
+            format_details::generic_format_value<StringType>(output),
             std::forward<Args>(args)...);
         }
         else {

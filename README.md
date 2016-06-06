@@ -19,5 +19,5 @@ Prints:
 ## Tested Compilers
 
 * Visual Studio 2015
-* Xcode 7.3.1
-* GCC 6.1.0
+* Xcode 7.3.1 (`-std=c++11`)
+* GCC 4.8.4 (`-std=c++11`)
